@@ -11,8 +11,8 @@ class AdminPageFieldEditLinks extends WireData implements Module {
 
 		return array(
 			'title' => 'Page Field Edit Links',
-			'version' => '3.1.3',
-			'summary' => 'Creates edit links on Page fields so that pages can be added or edited in a modal window without leaving the edit screen',
+			'version' => '3.1.4',
+			'summary' => 'Creates edit links on Page fields so that pages can be added or edited in a modal window without leaving the edit screen. (Modal window is optional for edits).',
 			'author' => 'Mike Spooner (thetuningspoon), macrura',
 			'href' => 'http://processwire.com',
 			'singular' => true,
@@ -70,8 +70,17 @@ class AdminPageFieldEditLinks extends WireData implements Module {
 
 				if($that->editLinks) $field->attr('checked', 'checked');
 
-				$event->return->append($field);
+                $event->return->append($field);
 
+                $field = wire('modules')->get('InputfieldCheckbox');
+                $field->attr('name', 'no_modals');
+                $field->attr('value', 1);
+                $field->label = __('Edit linked pages in new tab');
+                $field->description = __('If checked, linked pages will open in a new tab, not a modal.');
+
+                if ($that->no_modals) $field->attr('checked', 'checked');
+
+                $event->return->append($field);
 
 				$field = wire('modules')->get('InputfieldCheckbox');
 				$field->attr('name', 'newPageLink');
@@ -116,6 +125,15 @@ class AdminPageFieldEditLinks extends WireData implements Module {
 					'newPageLabel' => __('New'),
 					'editPageLabel' => __('View'),
 				));
+                if ($that->no_modals) {
+                    $that->config->js('editModals', [
+                        'class' => ''
+                    ]);
+                } else {
+                    $that->config->js('editModals', [
+                        'class' => 'pw-modal pw-modal-medium'
+                    ]);
+                }
 			}
 		});
 
@@ -155,7 +173,20 @@ class AdminPageFieldEditLinks extends WireData implements Module {
 
 			if($that->editLinks) {
                 $htmlClasses .= "InputfieldPage-editLinks";
-                $htmlDataAttributes .= "data-pageid='{$that->hasPage->get($that->hasField)->id}'";
+
+                $value = $that->attr('value');
+                if(is_array($value) || $value instanceof PageArray) {
+                    $ids = [];
+                    foreach ($value as $p) {
+                        $ids[] = $p->id;
+                    }
+                    $that->config->js('editLockedLinksArray', [
+                        'pageIds' => $ids
+                    ]);
+
+                } else {
+                    $htmlDataAttributes .= "data-pageid='{$that->hasPage->get($that->hasField)->id}'";
+                }
             }
 			if($that->newPageLink) {
 				$newPageParent = $that->newPageParent ?: $that->parent_id;

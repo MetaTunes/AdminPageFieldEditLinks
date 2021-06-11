@@ -300,16 +300,26 @@ function AdminPageFieldEditLinks() {
 			});
 		});
 	}
-    
+
 	function addEditLinkToValueOnly($field) {
 		$field.each(function () {
 			$('.InputfieldPageEditButton', this).remove(); // Remove edit button if it already exists
-            
-			var id = $(this).data('pageid');
 
-			if (id > 1) {
-				$(this).after(" <span class='InputfieldPageEditButton'><a class='pw-modal pw-modal-medium' data-buttons='#submit_save, #submit_publish, #submit_save_unpublished' data-autoclose href='" + config.urls.admin + "page/edit/?id=" + id + "' target='_blank'><i class='fa fa-search'></i> " + config.AdminPageFieldEditLinks.editPageLabel + "</a></span> ");
+			var editLockedLinksArray = ProcessWire.config.editLockedLinksArray;
+			if (editLockedLinksArray.pageIds) {
+				var lockedValues = $(".PageArray.pw-bullets li");
+				$.each(lockedValues, function (key, value) {
+					$(this).attr('data-pageid', editLockedLinksArray.pageIds[key]);
+				});
 			}
+			var modalClass = '"'+ ProcessWire.config.editModals.class + '"';
+			var editItems = $("[data-pageid]");
+			$.each(editItems, function () {
+				var id = $(this).data('pageid');
+				if (id > 1) {
+					$(this).after(" <span class='InputfieldPageEditButton'><a class=" + modalClass + " data-buttons='#submit_save, #submit_publish, #submit_save_unpublished' data-autoclose href='" + config.urls.admin + "page/edit/?id=" + id + "' target='_blank'><i class='fa fa-search'></i> " + config.AdminPageFieldEditLinks.editPageLabel + "</a></span> ");
+				}
+			});
 		});
 	}
 
